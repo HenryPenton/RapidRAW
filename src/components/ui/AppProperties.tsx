@@ -15,6 +15,7 @@ export enum Invokes {
   CalculateAutoAdjustments = 'calculate_auto_adjustments',
   CancelExport = 'cancel_export',
   CheckAIConnectorStatus = 'check_ai_connector_status',
+  CheckBatchExportOverwrites = 'check_batch_export_overwrites',
   ClearAllSidecars = 'clear_all_sidecars',
   ClearAiTags = 'clear_ai_tags',
   ClearAllTags = 'clear_all_tags',

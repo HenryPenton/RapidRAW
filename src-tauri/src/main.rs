@@ -2104,6 +2104,37 @@ async fn export_image(
 }
 
 #[tauri::command]
+fn check_batch_export_overwrites(
+    output_folder: String,
+    paths: Vec<String>,
+    filename_template: String,
+    output_format: String,
+) -> Result<Vec<String>, String> {
+    let output_folder_path = std::path::Path::new(&output_folder);
+    let total = paths.len();
+    let mut existing = Vec::new();
+
+    for (i, image_path_str) in paths.iter().enumerate() {
+        let (source_path, _) = parse_virtual_path(image_path_str);
+        let file_date = exif_processing::get_creation_date_from_path(&source_path);
+        let new_stem = crate::file_management::generate_filename_from_template(
+            &filename_template,
+            &source_path,
+            i + 1,
+            total,
+            &file_date,
+        );
+        let new_filename = format!("{}.{}", new_stem, output_format);
+        let output_path = output_folder_path.join(&new_filename);
+        if output_path.exists() {
+            existing.push(new_filename);
+        }
+    }
+
+    Ok(existing)
+}
+
+#[tauri::command]
 async fn batch_export_images(
     output_folder: String,
     paths: Vec<String>,
@@ -4416,6 +4447,7 @@ fn main() {
             apply_adjustments,
             export_image,
             batch_export_images,
+            check_batch_export_overwrites,
             cancel_export,
             estimate_export_size,
             estimate_batch_export_size,

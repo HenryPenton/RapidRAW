@@ -1,5 +1,30 @@
 import { useState, useMemo, useCallback } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { ask } from '@tauri-apps/plugin-dialog';
 import { ExportPreset, WatermarkAnchor } from '../components/ui/ExportImportProperties';
+import { Invokes } from '../components/ui/AppProperties';
+
+export async function confirmBatchOverwrites(
+  outputFolder: string,
+  paths: string[],
+  filenameTemplate: string,
+  outputFormat?: string,
+): Promise<boolean> {
+  const existingFiles: string[] = await invoke(Invokes.CheckBatchExportOverwrites, {
+    outputFolder,
+    paths,
+    filenameTemplate,
+    outputFormat,
+  });
+  if (existingFiles.length === 0) return true;
+  const fileList = existingFiles.length <= 5
+    ? existingFiles.join('\n')
+    : existingFiles.slice(0, 5).join('\n') + `\n... and ${existingFiles.length - 5} more`;
+  return ask(
+    `The following file(s) already exist and will be overwritten:\n\n${fileList}`,
+    { title: 'Overwrite files?', kind: 'warning', okLabel: 'Overwrite', cancelLabel: 'Cancel' },
+  );
+}
 
 export function useExportSettings() {
   const [fileFormat, setFileFormat] = useState('jpeg');

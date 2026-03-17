@@ -21,7 +21,7 @@ import {
 } from '../../ui/ExportImportProperties';
 import { Invokes, ImageFile, AppSettings } from '../../ui/AppProperties';
 import ExportPresetsList from '../../ui/ExportPresetsList';
-import { useExportSettings } from '../../../hooks/useExportSettings';
+import { useExportSettings, confirmBatchOverwrites } from '../../../hooks/useExportSettings';
 
 interface LibraryExportPanelProps {
   exportState: ExportState;
@@ -453,12 +453,15 @@ export default function LibraryExportPanel({
       });
 
       if (outputFolder) {
+        const outputFormat = FILE_FORMATS.find((f: FileFormat) => f.id === fileFormat)?.extensions[0];
+        if (!(await confirmBatchOverwrites(outputFolder, multiSelectedPaths, finalFilenameTemplate, outputFormat)))
+          return;
         saveLastUsedPreset(outputFolder as string);
         setExportState({ status: Status.Exporting, progress: { current: 0, total: numImages }, errorMessage: '' });
         await invoke(Invokes.BatchExportImages, {
           exportSettings,
           outputFolder,
-          outputFormat: FILE_FORMATS.find((f: FileFormat) => f.id === fileFormat)?.extensions[0],
+          outputFormat,
           paths: multiSelectedPaths,
         });
       }
